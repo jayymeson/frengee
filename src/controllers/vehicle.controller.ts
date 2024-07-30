@@ -4,7 +4,10 @@ import { ListVehiclesUseCase } from "../usecase/listVehicle-usecase";
 import { GetVehicleUseCase } from "../usecase/getVeichicle-usecase";
 import { UpdateVehicleUseCase } from "../usecase/updateVechicle-usecase";
 import { DeleteVehicleUseCase } from "../usecase/deleteVehicle-usecase";
+import { CreateVehicleUseCase } from "../usecase/createVehicle-usecase";
 import { VehicleRepository } from "../repositories/vehicle.repository";
+import { CreateVehicleDTO } from "../dto/createVehicle.dto";
+import { vehicleSchema } from "../schema/vehicle.schema";
 
 /**
  * @swagger
@@ -13,28 +16,12 @@ import { VehicleRepository } from "../repositories/vehicle.repository";
  *   description: Vehicle management
  */
 
-/**
- * @swagger
- * /vehicles:
- *   get:
- *     summary: Retrieve a list of vehicles
- *     tags: [Vehicles]
- *     responses:
- *       200:
- *         description: A list of vehicles.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Vehicle'
- */
-
 export class VehicleController {
   private listVehiclesUseCase: ListVehiclesUseCase;
   private getVehicleUseCase: GetVehicleUseCase;
   private updateVehicleUseCase: UpdateVehicleUseCase;
   private deleteVehicleUseCase: DeleteVehicleUseCase;
+  private createVehicleUseCase: CreateVehicleUseCase;
 
   constructor() {
     const vehicleRepository = new VehicleRepository();
@@ -42,6 +29,7 @@ export class VehicleController {
     this.getVehicleUseCase = new GetVehicleUseCase(vehicleRepository);
     this.updateVehicleUseCase = new UpdateVehicleUseCase(vehicleRepository);
     this.deleteVehicleUseCase = new DeleteVehicleUseCase(vehicleRepository);
+    this.createVehicleUseCase = new CreateVehicleUseCase(vehicleRepository);
   }
 
   async getAll(req: Request, res: Response): Promise<void> {
@@ -87,9 +75,19 @@ export class VehicleController {
    *     requestBody:
    *       required: true
    *       content:
-   *         application/json:
+   *         multipart/form-data:
    *           schema:
-   *             $ref: '#/components/schemas/Vehicle'
+   *             type: object
+   *             properties:
+   *               make:
+   *                 type: string
+   *               model:
+   *                 type: string
+   *               year:
+   *                 type: number
+   *               imageUrl:
+   *                 type: string
+   *                 format: binary
    *     responses:
    *       201:
    *         description: The vehicle was successfully created.
@@ -102,9 +100,30 @@ export class VehicleController {
    */
 
   async create(req: Request, res: Response): Promise<void> {
-    const vehicle = req.body;
-    const newVehicle = await this.getVehicleUseCase.execute(vehicle);
-    res.status(201).json(newVehicle);
+    const { error } = vehicleSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      res
+        .status(400)
+        .json({ errors: error.details.map((detail) => detail.message) });
+      return;
+    }
+
+    const vehicleDTO: CreateVehicleDTO = {
+      make: req.body.make,
+      model: req.body.model,
+      year: Number(req.body.year),
+      imageUrl: "",
+    };
+
+    try {
+      const newVehicle = await this.createVehicleUseCase.execute(
+        vehicleDTO,
+        req.file
+      );
+      res.status(201).json(newVehicle);
+    } catch (err: any) {
+      res.status(400).send({ message: err.message });
+    }
   }
 
   /**
@@ -136,8 +155,17 @@ export class VehicleController {
    */
 
   async update(req: Request, res: Response): Promise<void> {
-    const vehicle = req.body;
-    await this.updateVehicleUseCase.execute(req.params.id, vehicle);
+    // Validate request body using Joi schema
+    const { error } = vehicleSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      res
+        .status(400)
+        .json({ errors: error.details.map((detail) => detail.message) });
+      return;
+    }
+
+    const vehicleData = req.body;
+    await this.updateVehicleUseCase.execute(req.params.id, vehicleData);
     res.sendStatus(204);
   }
 

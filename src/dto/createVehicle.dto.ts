@@ -11,5 +11,5 @@ export class CreateVehicleDTO {
   year!: number;
 
   @IsString()
-  imageUrl?: string;
+  imageUrl!: string;
 }

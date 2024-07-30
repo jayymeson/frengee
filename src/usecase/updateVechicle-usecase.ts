@@ -6,12 +6,18 @@ export class UpdateVehicleUseCase {
   constructor(private vehicleRepository: VehicleRepository) {}
 
   async execute(id: string, vehicleData: Partial<Vehicle>): Promise<void> {
-    const vehicle: Vehicle = {
+    const vehicle: Partial<Vehicle> = {
       _id: new ObjectId(id),
-      make: vehicleData.make ?? "",
-      model: vehicleData.model ?? "",
-      year: vehicleData.year ?? 0,
+      make: vehicleData.make,
+      model: vehicleData.model,
+      year: vehicleData.year,
+      imageUrl: vehicleData.imageUrl,
     };
-    await this.vehicleRepository.update(vehicle);
+
+    const vehicleToUpdate: any = Object.fromEntries(
+      Object.entries(vehicle).filter(([_, v]) => v !== undefined)
+    );
+
+    await this.vehicleRepository.update(vehicleToUpdate as Vehicle);
   }
 }
