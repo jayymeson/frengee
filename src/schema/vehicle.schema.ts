@@ -4,5 +4,5 @@ export const vehicleSchema = Joi.object({
   make: Joi.string().required(),
   model: Joi.string().required(),
   year: Joi.number().integer().required(),
-  imageUrl: Joi.string().required(),
+  imageUrl: Joi.string(),
 });
