@@ -6,10 +6,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const mongoUrl = process.env.MONGO_URL as string;
-if (!mongoUrl) {
+const dbName = "vehicle_db";
+
+if (!mongoUrl && process.env.NODE_ENV !== "test") {
   throw new Error("MONGO_URL environment variable is not defined");
 }
-const dbName = "vehicle_db";
 
 export class VehicleRepository implements VehicleRepositoryInterface {
   private db: Db | undefined;
@@ -17,16 +18,22 @@ export class VehicleRepository implements VehicleRepositoryInterface {
   private client: MongoClient | undefined;
 
   constructor() {
-    this.connectToDb()
-      .then(() => {
-        console.log("Database connected and collection initialized");
-      })
-      .catch((err) => {
-        console.error("Failed to connect to MongoDB", err);
-      });
+    if (process.env.NODE_ENV !== "test") {
+      this.connectToDb()
+        .then(() => {
+          console.log("Database connected and collection initialized");
+        })
+        .catch((err) => {
+          console.error("Failed to connect to MongoDB", err);
+        });
+    }
   }
 
   private async connectToDb(): Promise<void> {
+    if (process.env.NODE_ENV === "test") {
+      console.log("Skipping MongoDB connection for test environment");
+      return;
+    }
     try {
       this.client = await MongoClient.connect(mongoUrl);
       this.db = this.client.db(dbName);
@@ -65,6 +72,11 @@ export class VehicleRepository implements VehicleRepositoryInterface {
   }
 
   private async ensureCollectionInitialized(): Promise<void> {
+    if (process.env.NODE_ENV === "test") {
+      console.log("Skipping MongoDB connection for test environment");
+      return;
+    }
+
     if (!this.collection) {
       await this.connectToDb();
     }

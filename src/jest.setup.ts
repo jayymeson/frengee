@@ -1,10 +1,11 @@
 process.env.NODE_ENV = 'test';
-import { connectDB, disconnectDB } from '../src/config/mongoose';
 
 beforeAll(async () => {
+  const { connectDB } = await import('../src/config/mongoose');
   await connectDB();
 }, 30000);
 
 afterAll(async () => {
+  const { disconnectDB } = await import('../src/config/mongoose');
   await disconnectDB();
 }, 30000);

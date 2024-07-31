@@ -99,7 +99,7 @@ export class VehicleController {
    *         description: Bad request
    */
 
-  async create(req: Request, res: Response): Promise<void> {
+  public async create(req: Request, res: Response): Promise<void> {
     const { error } = vehicleSchema.validate(req.body, { abortEarly: false });
     if (error) {
       res
@@ -116,12 +116,17 @@ export class VehicleController {
     };
 
     try {
+      if (!req.file) {
+        throw new Error("No file uploaded.");
+      }
+
       const newVehicle = await this.createVehicleUseCase.execute(
         vehicleDTO,
         req.file
       );
       res.status(201).json(newVehicle);
     } catch (err: any) {
+      console.error("Error creating vehicle:", err);
       res.status(400).send({ message: err.message });
     }
   }

@@ -12,7 +12,7 @@ const config: Config.InitialOptions = {
   detectOpenHandles: true,
   forceExit: true,
   verbose: true,
-  testTimeout: 30000, // Aumente o timeout global dos testes
+  testTimeout: 30000,
 };
 
 export default config;
