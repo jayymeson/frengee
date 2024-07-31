@@ -19,7 +19,7 @@ export class CreateVehicleUseCase {
     }
 
     if (!file) {
-      throw new Error("No file uploaded.");
+      throw new Error("No imageUrl uploaded.");
     }
 
     const bucket = admin.storage().bucket();
