@@ -14,15 +14,22 @@ const dbName = "vehicle_db";
 export class VehicleRepository implements VehicleRepositoryInterface {
   private db: Db | undefined;
   private collection: Collection<Vehicle> | undefined;
+  private client: MongoClient | undefined;
 
   constructor() {
-    this.connectToDb();
+    this.connectToDb()
+      .then(() => {
+        console.log("Database connected and collection initialized");
+      })
+      .catch((err) => {
+        console.error("Failed to connect to MongoDB", err);
+      });
   }
 
   private async connectToDb(): Promise<void> {
     try {
-      const client = await MongoClient.connect(mongoUrl);
-      this.db = client.db(dbName);
+      this.client = await MongoClient.connect(mongoUrl);
+      this.db = this.client.db(dbName);
       this.collection = this.db.collection<Vehicle>("vehicles");
     } catch (err) {
       console.error("Failed to connect to MongoDB", err);
@@ -30,40 +37,36 @@ export class VehicleRepository implements VehicleRepositoryInterface {
   }
 
   public async save(vehicle: Vehicle): Promise<void> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    await this.collection.insertOne(vehicle);
+    await this.ensureCollectionInitialized();
+    await this.collection!.insertOne(vehicle);
   }
 
   public async list(): Promise<Vehicle[]> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    return await this.collection.find().toArray();
+    await this.ensureCollectionInitialized();
+    return await this.collection!.find().toArray();
   }
 
   public async find(id: string): Promise<Vehicle | null> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    return await this.collection.findOne({ _id: new ObjectId(id) });
+    await this.ensureCollectionInitialized();
+    return await this.collection!.findOne({ _id: new ObjectId(id) });
   }
 
   public async update(vehicle: Vehicle): Promise<void> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    await this.collection.updateOne(
+    await this.ensureCollectionInitialized();
+    await this.collection!.updateOne(
       { _id: new ObjectId(vehicle._id) },
       { $set: vehicle }
     );
   }
 
   public async delete(id: string): Promise<void> {
+    await this.ensureCollectionInitialized();
+    await this.collection!.deleteOne({ _id: new ObjectId(id) });
+  }
+
+  private async ensureCollectionInitialized(): Promise<void> {
     if (!this.collection) {
-      throw new Error("Collection is not initialized");
+      await this.connectToDb();
     }
-    await this.collection.deleteOne({ _id: new ObjectId(id) });
   }
 }

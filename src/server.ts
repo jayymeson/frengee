@@ -1,11 +1,13 @@
-import "reflect-metadata";
-import dotenv from "dotenv";
 import app from "./app";
-
-dotenv.config();
+import { connectDB } from "./config/mongoose";
 
 const port = process.env.PORT || 3017;
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+const startServer = async () => {
+  await connectDB();
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+};
+
+startServer();
