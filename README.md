@@ -158,7 +158,7 @@ Endpoint: `POST /auth/login`
 }
 ```
 
-![Autenticação](/mnt/data/file-gWIwnU0h95ipCnt3lvCjDFHm.png)
+![Autenticação](![alt text](image.png))
 
 ## Exemplos de Uso
 
@@ -187,7 +187,7 @@ Endpoint: `POST /api/vehicles`
 }
 ```
 
-![Criação de Veículo](/mnt/data/file-7cGfuUUZaBEgX5j1lXItjET7.png)
+![Criação de Veículo](![alt text](image-1.png))
 
 ### Atualização de um Veículo
 
@@ -206,7 +206,7 @@ Endpoint: `PUT /api/vehicles/{id}`
 
 Status 204 No Content
 
-![Atualização de Veículo](/mnt/data/file-oZZwtE5uh3lrIIpSmVWnzvXH.png)
+![Atualização de Veículo](![alt text](image-2.png))
 
 ## Contribuição
 
