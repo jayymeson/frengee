@@ -8,7 +8,7 @@ import admin from "./config/firebase";
 dotenv.config();
 
 const app = express();
-
+//test
 app.use(express.json());
 app.use("/api", vehicleRoutes);
 app.use("/auth", authRoutes);
