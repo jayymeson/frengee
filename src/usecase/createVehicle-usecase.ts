@@ -11,14 +11,19 @@ export class CreateVehicleUseCase {
     vehicleDTO: CreateVehicleDTO,
     file: Express.Multer.File | undefined
   ): Promise<Vehicle> {
+    console.log("Validating vehicle DTO:", vehicleDTO);
     const errors = await validate(vehicleDTO);
     if (errors.length > 0) {
+      console.error("Validation errors:", errors);
       throw new Error(
-        errors.map((err) => Object.values(err.constraints!)).join(", ")
+        errors
+          .map((err) => Object.values(err.constraints!).join(", "))
+          .join(", ")
       );
     }
 
     if (!file) {
+      console.error("No file uploaded");
       throw new Error("No imageUrl uploaded.");
     }
 
@@ -32,6 +37,7 @@ export class CreateVehicleUseCase {
 
     return new Promise((resolve, reject) => {
       blobStream.on("error", (err) => {
+        console.error("Error uploading file:", err);
         reject(new Error(err.message));
       });
 
@@ -46,6 +52,7 @@ export class CreateVehicleUseCase {
         };
 
         await this.vehicleRepository.save(vehicle);
+        console.log("Vehicle saved to database:", vehicle);
         resolve(vehicle);
       });
 

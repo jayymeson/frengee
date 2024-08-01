@@ -6,6 +6,10 @@ export class UpdateVehicleUseCase {
   constructor(private vehicleRepository: VehicleRepository) {}
 
   async execute(id: string, vehicleData: Partial<Vehicle>): Promise<void> {
+    if (!ObjectId.isValid(id)) {
+      throw new Error("Invalid ID format");
+    }
+
     const vehicle: Partial<Vehicle> = {
       _id: new ObjectId(id),
       make: vehicleData.make,
@@ -18,6 +22,11 @@ export class UpdateVehicleUseCase {
       Object.entries(vehicle).filter(([_, v]) => v !== undefined)
     );
 
-    await this.vehicleRepository.update(vehicleToUpdate as Vehicle);
+    const result = await this.vehicleRepository.update(
+      vehicleToUpdate as Vehicle
+    );
+    if (result.matchedCount === 0) {
+      throw new Error("Vehicle not found");
+    }
   }
 }

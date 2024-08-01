@@ -6,23 +6,37 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const mongoUrl = process.env.MONGO_URL as string;
-if (!mongoUrl) {
+const dbName = "vehicle_db";
+
+if (!mongoUrl && process.env.NODE_ENV !== "test") {
   throw new Error("MONGO_URL environment variable is not defined");
 }
-const dbName = "vehicle_db";
 
 export class VehicleRepository implements VehicleRepositoryInterface {
   private db: Db | undefined;
   private collection: Collection<Vehicle> | undefined;
+  private client: MongoClient | undefined;
 
   constructor() {
-    this.connectToDb();
+    if (process.env.NODE_ENV !== "test") {
+      this.connectToDb()
+        .then(() => {
+          console.log("Database connected and collection initialized");
+        })
+        .catch((err) => {
+          console.error("Failed to connect to MongoDB", err);
+        });
+    }
   }
 
   private async connectToDb(): Promise<void> {
+    if (process.env.NODE_ENV === "test") {
+      console.log("Skipping MongoDB connection for test environment");
+      return;
+    }
     try {
-      const client = await MongoClient.connect(mongoUrl);
-      this.db = client.db(dbName);
+      this.client = await MongoClient.connect(mongoUrl);
+      this.db = this.client.db(dbName);
       this.collection = this.db.collection<Vehicle>("vehicles");
     } catch (err) {
       console.error("Failed to connect to MongoDB", err);
@@ -30,40 +44,44 @@ export class VehicleRepository implements VehicleRepositoryInterface {
   }
 
   public async save(vehicle: Vehicle): Promise<void> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    await this.collection.insertOne(vehicle);
+    await this.ensureCollectionInitialized();
+    await this.collection!.insertOne(vehicle);
   }
 
   public async list(): Promise<Vehicle[]> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    return await this.collection.find().toArray();
+    await this.ensureCollectionInitialized();
+    return await this.collection!.find().toArray();
   }
 
   public async find(id: string): Promise<Vehicle | null> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
+    if (!ObjectId.isValid(id)) {
+      return null;
     }
-    return await this.collection.findOne({ _id: new ObjectId(id) });
+    await this.ensureCollectionInitialized();
+    return await this.collection!.findOne({ _id: new ObjectId(id) });
   }
 
-  public async update(vehicle: Vehicle): Promise<void> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
-    }
-    await this.collection.updateOne(
+  public async update(vehicle: Vehicle): Promise<any> {
+    await this.ensureCollectionInitialized();
+    return await this.collection!.updateOne(
       { _id: new ObjectId(vehicle._id) },
       { $set: vehicle }
     );
   }
 
-  public async delete(id: string): Promise<void> {
-    if (!this.collection) {
-      throw new Error("Collection is not initialized");
+  public async delete(id: string): Promise<any> { 
+    await this.ensureCollectionInitialized();
+    return await this.collection!.deleteOne({ _id: new ObjectId(id) });
+  }
+
+  private async ensureCollectionInitialized(): Promise<void> {
+    if (process.env.NODE_ENV === "test") {
+      console.log("Skipping MongoDB connection for test environment");
+      return;
     }
-    await this.collection.deleteOne({ _id: new ObjectId(id) });
+
+    if (!this.collection) {
+      await this.connectToDb();
+    }
   }
 }

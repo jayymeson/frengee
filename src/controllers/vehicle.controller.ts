@@ -63,7 +63,11 @@ export class VehicleController {
 
   async getById(req: Request, res: Response): Promise<void> {
     const vehicle = await this.getVehicleUseCase.execute(req.params.id);
-    res.json(vehicle);
+    if (!vehicle) {
+      res.status(404).json({ message: "Vehicle not found" });
+    } else {
+      res.json(vehicle);
+    }
   }
 
   /**
@@ -99,7 +103,7 @@ export class VehicleController {
    *         description: Bad request
    */
 
-  async create(req: Request, res: Response): Promise<void> {
+  public async create(req: Request, res: Response): Promise<void> {
     const { error } = vehicleSchema.validate(req.body, { abortEarly: false });
     if (error) {
       res
@@ -116,12 +120,17 @@ export class VehicleController {
     };
 
     try {
+      if (!req.file) {
+        throw new Error("No file uploaded.");
+      }
+
       const newVehicle = await this.createVehicleUseCase.execute(
         vehicleDTO,
         req.file
       );
       res.status(201).json(newVehicle);
     } catch (err: any) {
+      console.error("Error creating vehicle:", err);
       res.status(400).send({ message: err.message });
     }
   }
@@ -155,7 +164,6 @@ export class VehicleController {
    */
 
   async update(req: Request, res: Response): Promise<void> {
-    // Validate request body using Joi schema
     const { error } = vehicleSchema.validate(req.body, { abortEarly: false });
     if (error) {
       res
@@ -165,8 +173,16 @@ export class VehicleController {
     }
 
     const vehicleData = req.body;
-    await this.updateVehicleUseCase.execute(req.params.id, vehicleData);
-    res.sendStatus(204);
+    try {
+      await this.updateVehicleUseCase.execute(req.params.id, vehicleData);
+      res.sendStatus(204);
+    } catch (error: any) {
+      if (error.message === "Vehicle not found") {
+        res.status(404).json({ message: "Vehicle not found" });
+      } else {
+        res.status(400).json({ message: error.message });
+      }
+    }
   }
 
   /**
@@ -190,8 +206,16 @@ export class VehicleController {
    */
 
   async delete(req: Request, res: Response): Promise<void> {
-    await this.deleteVehicleUseCase.execute(req.params.id);
-    res.sendStatus(204);
+    try {
+      await this.deleteVehicleUseCase.execute(req.params.id);
+      res.sendStatus(204);
+    } catch (error: any) {
+      if (error.message === "Vehicle not found") {
+        res.status(404).json({ message: "Vehicle not found" });
+      } else {
+        res.status(400).json({ message: error.message });
+      }
+    }
   }
 
   /**
