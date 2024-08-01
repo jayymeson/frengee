@@ -13,6 +13,9 @@ const config: Config.InitialOptions = {
   forceExit: true,
   verbose: true,
   testTimeout: 30000,
+  collectCoverage: true,
+  coverageDirectory: "coverage", 
+  coverageReporters: ["text", "lcov"],
 };
 
 export default config;
