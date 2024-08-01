@@ -54,21 +54,24 @@ export class VehicleRepository implements VehicleRepositoryInterface {
   }
 
   public async find(id: string): Promise<Vehicle | null> {
+    if (!ObjectId.isValid(id)) {
+      return null;
+    }
     await this.ensureCollectionInitialized();
     return await this.collection!.findOne({ _id: new ObjectId(id) });
   }
 
-  public async update(vehicle: Vehicle): Promise<void> {
+  public async update(vehicle: Vehicle): Promise<any> {
     await this.ensureCollectionInitialized();
-    await this.collection!.updateOne(
+    return await this.collection!.updateOne(
       { _id: new ObjectId(vehicle._id) },
       { $set: vehicle }
     );
   }
 
-  public async delete(id: string): Promise<void> {
+  public async delete(id: string): Promise<any> { 
     await this.ensureCollectionInitialized();
-    await this.collection!.deleteOne({ _id: new ObjectId(id) });
+    return await this.collection!.deleteOne({ _id: new ObjectId(id) });
   }
 
   private async ensureCollectionInitialized(): Promise<void> {

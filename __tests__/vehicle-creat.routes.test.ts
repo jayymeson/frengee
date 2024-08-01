@@ -4,13 +4,11 @@ import { generateToken } from "../src/auth/auth.middleware";
 import path from "path";
 import { MongoClient, Collection, Db } from "mongodb";
 
-// Mock da conexão com o banco de dados
 jest.mock("../src/config/mongoose", () => ({
   connectDB: jest.fn().mockResolvedValue(null),
   disconnectDB: jest.fn().mockResolvedValue(null),
 }));
 
-// Mock do VehicleRepository
 jest.mock("../src/repositories/vehicle.repository", () => {
   return {
     VehicleRepository: jest.fn().mockImplementation(() => {
