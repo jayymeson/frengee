@@ -29,8 +29,20 @@ jest.mock("../src/repositories/vehicle.repository", () => {
             return null; // Retorna null para IDs desconhecidos
           }
         }),
-        update: jest.fn().mockResolvedValue(null),
-        delete: jest.fn().mockResolvedValue(null),
+        update: jest.fn().mockImplementation((vehicle) => {
+          if (vehicle._id.toString() === "60c72b2f4f1a4e3d8c8b4567") {
+            return { matchedCount: 1 };
+          } else {
+            return { matchedCount: 0 };
+          }
+        }),
+        delete: jest.fn().mockImplementation((id) => {
+          if (id === "60c72b2f4f1a4e3d8c8b4567") {
+            return { deletedCount: 1 };
+          } else {
+            return { deletedCount: 0 };
+          }
+        }),
         ensureCollectionInitialized: jest.fn().mockResolvedValue(null),
       };
     }),
@@ -79,5 +91,17 @@ describe("Vehicle routes - GET by ID", () => {
       "imageUrl",
       "https://example.com/image.jpg"
     );
+  });
+
+  it("should return 404 if vehicle not found", async () => {
+    const response = await request(app)
+      .get("/api/vehicles/60c72b2f4f1a4e3d8c8b4560")
+      .set("Authorization", `Bearer ${token}`);
+
+    console.log("Response status:", response.status);
+    console.log("Response body:", response.body);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("message", "Vehicle not found");
   });
 });
