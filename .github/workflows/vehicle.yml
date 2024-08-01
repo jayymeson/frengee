@@ -30,22 +30,22 @@ jobs:
             jayymeson/ci-cd-example-dev:latest
             jayymeson/ci-cd-example-dev:v${{github.run_number}}
 
-  CI-CD-EXAMPLE-CD:
-    runs-on: ubuntu-22.04
-    needs: [CI-CD-EXAMPLE-CI]
-    steps:
-      - uses: actions/checkout@v3
+  # CI-CD-EXAMPLE-CD:
+  #   runs-on: ubuntu-22.04
+  #   needs: [CI-CD-EXAMPLE-CI]
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Kubernetes Set Context
-        uses: Azure/k8s-set-context@v3.0
-        with:
-          method: kubeconfig
-          kubeconfig: ${{secrets.K8S_CONFIG}}
+  #     - name: Kubernetes Set Context
+  #       uses: Azure/k8s-set-context@v3.0
+  #       with:
+  #         method: kubeconfig
+  #         kubeconfig: ${{secrets.K8S_CONFIG}}
 
-      - name: Deploy to Kubernetes cluster
-        uses: Azure/k8s-deploy@v4.9
-        with:
-          images: jayymeson/ci-cd-example-dev:v${{github.run_number}}
-          manifests: |
-            k8s/vehicle.yml
-            k8s/ingress.yml
+  #     - name: Deploy to Kubernetes cluster
+  #       uses: Azure/k8s-deploy@v4.9
+  #       with:
+  #         images: jayymeson/ci-cd-example-dev:v${{github.run_number}}
+  #         manifests: |
+  #           k8s/vehicle.yml
+  #           k8s/ingress.yml
