@@ -1,0 +1,75 @@
+# MongoDB Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: root
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+---
+# Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frengee-test-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frengee-test
+  template:
+    metadata:
+      labels:
+        app: frengee-test
+    spec:
+      containers:
+        - name: frengee-test
+          image: jayymeson/frengee-test-dev:1.1
+          ports:
+            - containerPort: 3017
+          env:
+            - name: MONGO_URL
+              value: "mongodb://root:example@mongo:27017/your-db?authSource=admin"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frengee-test
+spec:
+  type: ClusterIP
+  selector:
+    app: frengee-test
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3017
+      targetPort: 3017

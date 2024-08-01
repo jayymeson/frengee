@@ -1,0 +1,51 @@
+name: VEHICLE-CI-CD
+
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+      - 'src/**'
+      - 'k8s/**'
+  workflow_dispatch:
+
+jobs:
+  CI-CD-EXAMPLE-CI:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Docker Login
+        uses: docker/login-action@v2.2.0
+        with:
+          username: ${{secrets.DOCKER_HUB_USER}}
+          password: ${{secrets.DOCKER_HUB_PWD}}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v4.1.1
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            jayymeson/ci-cd-example-dev:latest
+            jayymeson/ci-cd-example-dev:v${{github.run_number}}
+
+  # CI-CD-EXAMPLE-CD:
+  #   runs-on: ubuntu-22.04
+  #   needs: [CI-CD-EXAMPLE-CI]
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Kubernetes Set Context
+  #       uses: Azure/k8s-set-context@v3.0
+  #       with:
+  #         method: kubeconfig
+  #         kubeconfig: ${{secrets.K8S_CONFIG}}
+
+  #     - name: Deploy to Kubernetes cluster
+  #       uses: Azure/k8s-deploy@v4.9
+  #       with:
+  #         images: jayymeson/ci-cd-example-dev:v${{github.run_number}}
+  #         manifests: |
+  #           k8s/vehicle.yml
+  #           k8s/ingress.yml

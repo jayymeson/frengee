@@ -1,0 +1,13 @@
+Run application without kubernet
+ 1 Create an image
+ 2 push the image
+ 3 Configure a file deployment
+ 4 Configure a service file (where you will be able to access the container)
+
+docker ps - displays all running containers
+
+Generate Images
+  docker build -t jayymeson/frengee-test-dev:1.1 . (1.1 stable version)
+  docker push jayymeson/frengee-test-dev:1.1
+
+kubectl apply -f vehicle.yml
