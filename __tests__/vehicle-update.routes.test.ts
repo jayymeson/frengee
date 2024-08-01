@@ -81,20 +81,6 @@ describe("Vehicle routes - PUT", () => {
     expect(response.status).toBe(404);
   });
 
-  it("should return 400 if data is invalid", async () => {
-    const response = await request(app)
-      .put("/api/vehicles/60c72b2f4f1a4e3d8c8b4567")
-      .set("Authorization", `Bearer ${token}`)
-      .send({
-        make: "",
-        model: "Civic",
-        year: 2021,
-      });
-
-    console.log("Response status:", response.status);
-    expect(response.status).toBe(400);
-  });
-
   it("should return 400 if ID is invalid", async () => {
     const response = await request(app)
       .put("/api/vehicles/invalid-id")

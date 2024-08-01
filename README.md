@@ -31,7 +31,7 @@ cd frengee
 docker-compose up --build
 ```
 
-This command will build the Docker images and start the containers for backend_1, and mongo_1.
+Este comando irá construir as imagens Docker e iniciar os contêineres para backend_1 e mongo_1.
 
 2. Verifique se os contêineres estão rodando:
 
@@ -132,6 +132,81 @@ Certifique-se de adicionar os seguintes segredos no GitHub:
 - `DOCKER_HUB_USER`: Seu nome de usuário do Docker Hub.
 - `DOCKER_HUB_PWD`: Sua senha do Docker Hub.
 - `K8S_CONFIG`: Configuração do kubeconfig para acessar o cluster Kubernetes.
+
+## Autenticação
+
+Para utilizar a API, primeiro precisamos nos autenticar para obter um token de acesso.
+
+### Exemplo de Autenticação
+
+Endpoint: `POST /auth/login`
+
+**Request:**
+
+```json
+{
+  "email": "frengee@mail.com",
+  "password": "Abcd1234*"
+}
+```
+
+**Response:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+![Autenticação](/mnt/data/file-gWIwnU0h95ipCnt3lvCjDFHm.png)
+
+## Exemplos de Uso
+
+### Criação de um Veículo
+
+Após obter o token, use-o no Bearer Token para criar um veículo.
+
+Endpoint: `POST /api/vehicles`
+
+**Request (multipart-form):**
+
+- make: Volks
+- model: Gol
+- year: 2020
+- imageUrl: [arquivo de imagem]
+
+**Response:**
+
+```json
+{
+  "make": "Volks",
+  "model": "Gol",
+  "year": 2020,
+  "imageUrl": "https://storage.googleapis.com/frengee-3bfe2.appspot.com/carbon.png",
+  "_id": "66ab9903d4896af48b1535f"
+}
+```
+
+![Criação de Veículo](/mnt/data/file-7cGfuUUZaBEgX5j1lXItjET7.png)
+
+### Atualização de um Veículo
+
+Para atualizar um veículo, também precisamos passar o Bearer Token.
+
+Endpoint: `PUT /api/vehicles/{id}`
+
+**Request (multipart-form):**
+
+- make: Jeep
+- model: Compass
+- year: 2022
+- imageUrl: [arquivo de imagem]
+
+**Response:**
+
+Status 204 No Content
+
+![Atualização de Veículo](/mnt/data/file-oZZwtE5uh3lrIIpSmVWnzvXH.png)
 
 ## Contribuição
 

@@ -29,11 +29,5 @@ router.put(
 router.delete("/vehicles/:id", authenticateJWT, (req, res) =>
   vehicleController.delete(req, res)
 );
-router.post(
-  "/vehicles/upload",
-  authenticateJWT,
-  upload.single("file"),
-  (req, res) => vehicleController.uploadFile(req, res)
-);
 
 export default router;

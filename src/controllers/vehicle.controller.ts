@@ -8,6 +8,7 @@ import { CreateVehicleUseCase } from "../usecase/createVehicle-usecase";
 import { VehicleRepository } from "../repositories/vehicle.repository";
 import { CreateVehicleDTO } from "../dto/createVehicle.dto";
 import { vehicleSchema } from "../schema/vehicle.schema";
+import { UpdateVehicleDTO } from "../dto/updateVehicle.dto";
 
 /**
  * @swagger
@@ -32,6 +33,37 @@ export class VehicleController {
     this.createVehicleUseCase = new CreateVehicleUseCase(vehicleRepository);
   }
 
+  /**
+   * @swagger
+   * tags:
+   *   name: Vehicles
+   *   description: Vehicle management
+   * components:
+   *   securitySchemes:
+   *     bearerAuth:
+   *       type: http
+   *       scheme: bearer
+   *       bearerFormat: JWT
+   */
+
+  /**
+   * @swagger
+   * /vehicles:
+   *   get:
+   *     summary: Get all vehicles
+   *     tags: [Vehicles]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: List of all vehicles
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Vehicle'
+   */
   async getAll(req: Request, res: Response): Promise<void> {
     const vehicles = await this.listVehiclesUseCase.execute();
     res.json(vehicles);
@@ -43,6 +75,8 @@ export class VehicleController {
    *   get:
    *     summary: Get a vehicle by ID
    *     tags: [Vehicles]
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -76,6 +110,8 @@ export class VehicleController {
    *   post:
    *     summary: Create a new vehicle
    *     tags: [Vehicles]
+   *     security:
+   *       - bearerAuth: []
    *     requestBody:
    *       required: true
    *       content:
@@ -85,13 +121,20 @@ export class VehicleController {
    *             properties:
    *               make:
    *                 type: string
+   *                 description: The make of the vehicle
+   *                 example: Toyota
    *               model:
    *                 type: string
+   *                 description: The model of the vehicle
+   *                 example: Corolla
    *               year:
    *                 type: number
+   *                 description: The year the vehicle was manufactured
+   *                 example: 2020
    *               imageUrl:
    *                 type: string
    *                 format: binary
+   *                 description: The image of the vehicle
    *     responses:
    *       201:
    *         description: The vehicle was successfully created.
@@ -141,6 +184,8 @@ export class VehicleController {
    *   put:
    *     summary: Update a vehicle by ID
    *     tags: [Vehicles]
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -151,9 +196,26 @@ export class VehicleController {
    *     requestBody:
    *       required: true
    *       content:
-   *         application/json:
+   *         multipart/form-data:
    *           schema:
-   *             $ref: '#/components/schemas/Vehicle'
+   *             type: object
+   *             properties:
+   *               make:
+   *                 type: string
+   *                 description: The make of the vehicle
+   *                 example: Toyota
+   *               model:
+   *                 type: string
+   *                 description: The model of the vehicle
+   *                 example: Corolla
+   *               year:
+   *                 type: number
+   *                 description: The year the vehicle was manufactured
+   *                 example: 2020
+   *               imageUrl:
+   *                 type: string
+   *                 format: binary
+   *                 description: The image of the vehicle
    *     responses:
    *       204:
    *         description: The vehicle was successfully updated.
@@ -164,15 +226,11 @@ export class VehicleController {
    */
 
   async update(req: Request, res: Response): Promise<void> {
-    const { error } = vehicleSchema.validate(req.body, { abortEarly: false });
-    if (error) {
-      res
-        .status(400)
-        .json({ errors: error.details.map((detail) => detail.message) });
-      return;
+    const vehicleData: Partial<UpdateVehicleDTO> = req.body;
+    if (req.file) {
+      vehicleData.imageUrl = req.file.path;
     }
 
-    const vehicleData = req.body;
     try {
       await this.updateVehicleUseCase.execute(req.params.id, vehicleData);
       res.sendStatus(204);
@@ -191,6 +249,8 @@ export class VehicleController {
    *   delete:
    *     summary: Delete a vehicle by ID
    *     tags: [Vehicles]
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -216,56 +276,5 @@ export class VehicleController {
         res.status(400).json({ message: error.message });
       }
     }
-  }
-
-  /**
-   * @swagger
-   * /vehicles/upload:
-   *   post:
-   *     summary: Upload a vehicle file
-   *     tags: [Vehicles]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         multipart/form-data:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               file:
-   *                 type: string
-   *                 format: binary
-   *     responses:
-   *       200:
-   *         description: File uploaded successfully
-   *       400:
-   *         description: No file uploaded
-   */
-
-  async uploadFile(req: Request, res: Response): Promise<void> {
-    if (!req.file) {
-      res.status(400).send("No file uploaded.");
-      return;
-    }
-
-    const bucket = admin.storage().bucket();
-    const blob = bucket.file(req.file.originalname);
-    const blobStream = blob.createWriteStream({
-      metadata: {
-        contentType: req.file.mimetype,
-      },
-    });
-
-    blobStream.on("error", (err) => {
-      res.status(500).send({ message: err.message });
-    });
-
-    blobStream.on("finish", () => {
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-      res
-        .status(200)
-        .send({ fileName: req.file!.originalname, fileLocation: publicUrl });
-    });
-
-    blobStream.end(req.file.buffer);
   }
 }
